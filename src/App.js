@@ -1,17 +1,17 @@
 import { useState } from "react";
 import './App.css'
 
-function Square({ value, onSquareClick }) {
+function Square({ value, onSquareClick, className }) {
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button className={`square ${className}`} onClick={onSquareClick}>
       {value}
     </button>
   );
 }
 
-function Board({ xIsNext, squares, onPlay, move }) {
+function Board({ xIsNext, squares, onPlay, move, result }) {
   function handleClick(i) {
-    if (squares[i] || calculateWinner(squares)) {
+    if (squares[i] || calculateWinner(squares).winner) {
       return;
     }
     const nextSquares = squares.slice();
@@ -23,29 +23,36 @@ function Board({ xIsNext, squares, onPlay, move }) {
     onPlay(nextSquares);
   }
 
-  const winner = calculateWinner(squares);
+  const winner = result.winner;
   let status;
   let status2;
+  let status3 = null;
   status2 = "You are at move # " + move;
   if (winner) {
     status = "Winner: " + winner;
   } else {
     status = "Next player: " + (xIsNext ? "X" : "O");
   }
+  if (winner == null){
+    status3 = "No one is winning yet!";
+  }
 
   return (
     <>
       <div className="status"> {status} </div>
       <div className="status2"> {status2} </div>
+      <div className="status2"> {status3} </div>
       {Array(3).fill(null).map((_, rowIndex) => (
         <div key={rowIndex} className="board-row">
           {Array(3).fill(null).map((_, colIndex) => {
             const index = rowIndex * 3 + colIndex;
+            const isWinningSquare = result.winningSquares.includes(index);
             return (
               <Square
                 key={index}
                 value={squares[index]}
                 onSquareClick={() => handleClick(index)}
+                className={isWinningSquare ? 'winning-square' : ''} // Apply CSS class
               />
             );
           })}
@@ -71,10 +78,10 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { winner: squares[a], winningSquares: [a, b, c] };
     }
   }
-  return null;
+  return { winner: null, winningSquares: [] };
 }
 
 export default function Game() {
@@ -82,6 +89,14 @@ export default function Game() {
   const [currentMove, setCurrentMove] = useState(0);
   const xIsNext = currentMove % 2 === 0;
   const currentSquares = history[currentMove];
+  const [ascending, setAscending] = useState(true);
+  const result = calculateWinner(currentSquares);
+  let order;
+  if (ascending){
+    order = "Ascending";
+  } else {
+    order = "Descending";
+  }
 
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
@@ -91,6 +106,10 @@ export default function Game() {
 
   function jumpTo(nextMove) {
     setCurrentMove(nextMove);
+  }
+
+  function onOrderClick(){
+    setAscending(!ascending);
   }
 
   const moves = history.map((squares, move) => {
@@ -107,13 +126,17 @@ export default function Game() {
     );
   });
 
+  // Reverse the order of moves if not ascending
+  const sortedMoves = ascending ? moves : moves.slice().reverse();
+
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} move={currentMove}/>
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} move={currentMove} result={result}/>
       </div>
       <div className="game-info">
-        <ol> {moves}</ol>
+        <button className = "order" onClick = {onOrderClick}>{order}</button>
+        <ol> {sortedMoves}</ol>
       </div>
     </div>
   );
