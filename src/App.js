@@ -1,4 +1,5 @@
 import { useState } from "react";
+import './App.css'
 
 function Square({ value, onSquareClick }) {
   return (
@@ -8,7 +9,7 @@ function Square({ value, onSquareClick }) {
   );
 }
 
-function Board({ xIsNext, squares, onPlay }) {
+function Board({ xIsNext, squares, onPlay, move }) {
   function handleClick(i) {
     if (squares[i] || calculateWinner(squares)) {
       return;
@@ -24,6 +25,8 @@ function Board({ xIsNext, squares, onPlay }) {
 
   const winner = calculateWinner(squares);
   let status;
+  let status2;
+  status2 = "You are at move # " + move;
   if (winner) {
     status = "Winner: " + winner;
   } else {
@@ -33,6 +36,7 @@ function Board({ xIsNext, squares, onPlay }) {
   return (
     <>
       <div className="status"> {status} </div>
+      <div className="status2"> {status2} </div>
       <div className="board-row">
         <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
         <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
@@ -106,7 +110,7 @@ export default function Game() {
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} move={currentMove}/>
       </div>
       <div className="game-info">
         <ol> {moves}</ol>
